@@ -17,6 +17,8 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
+  'http://localhost:666',
+  'http://127.0.0.1:666',
 ];
 // Add production client URL from environment
 if (process.env.CLIENT_URL) {
@@ -52,14 +54,10 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // --------------- Routes ---------------
-app.use('/api/events',  require('./routes/events'));
-app.use('/api/news',    require('./routes/news'));
-app.use('/api/ai',      require('./routes/ai'));
-app.use('/api/finance', require('./routes/finance'));
-app.use('/api/flights', require('./routes/flights'));
-app.use('/api/vessels', require('./routes/vessels'));
-app.use('/api/cyber',   require('./routes/cyber'));
-app.use('/api/chokepoints', require('./routes/chokepoints'));
+app.use('/api/haarp',   require('./routes/haarp'));
+app.use('/api/events',  require('./routes/events')); // Keep for mapping compatibility
+app.use('/api/news',    require('./routes/news'));   // Keep for alerts feed compatibility
+app.use('/api/ai',      require('./routes/ai'));     // Keep for situation report compatibility
 app.use('/api/friday',  require('./routes/friday'));
 
 // Health check

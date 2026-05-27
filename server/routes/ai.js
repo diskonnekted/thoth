@@ -16,29 +16,30 @@ try {
 // ============================================================
 
 const DEMO_BRIEF = {
-  briefText: 'This country is currently experiencing moderate geopolitical tensions driven by regional instability and economic pressures. Intelligence assessments indicate a shifting security landscape with multiple stakeholders vying for influence. Diplomatic channels remain open but progress has been limited in recent negotiations.\n\nEconomic indicators suggest vulnerability to external shocks, particularly in energy and commodity markets. Civil society organizations report increasing concerns over governance transparency and institutional integrity. Regional alliances are being tested as competing interests create friction across traditional partnerships.',
-  stabilityScore: 62,
+  briefText: 'Ionospheric soundings over this sector indicate stable F-layer propagation with nominal electron density profiles. Magnetometer telemetry shows baseline geomagnetic activity, though micro-pulsations have been recorded in the VLF band. Atmospheric layers (Troposphere and Stratosphere) show balanced thermal stratification, with regional wind cells operating within normal seasonal variations.\n\nSpace weather indices (Kp, F10.7) suggest low solar storm probability, though high-latitude sectors exhibit mild auroral excitation. HAARP diagnostic systems (Riometer and Digital Ionosonde) report clear signal return pathways with zero cosmic noise absorption anomalies.',
+  stabilityScore: 82, // Represents "Atmospheric Stability Index"
   topRisks: [
-    { risk: 'Regional military escalation along contested borders', severity: 'HIGH' },
-    { risk: 'Economic sanctions impact on trade flows and currency stability', severity: 'MEDIUM' },
-    { risk: 'Internal political fragmentation weakening governance', severity: 'MEDIUM' }
+    { risk: 'High-altitude wind shear affecting localized weather patterns', severity: 'LOW' },
+    { risk: 'Increased solar flux causing minor ionospheric absorption anomalies', severity: 'MEDIUM' },
+    { risk: 'Localized temperature deviations shifting tropospheric pressure gradients', severity: 'LOW' }
   ],
-  outlook: 'Deteriorating',
-  keyActors: ['Government forces maintaining defensive posture', 'Opposition coalition pushing for reforms', 'Regional powers exerting diplomatic pressure'],
-  escalationFactors: ['Military buildup near border regions', 'Breakdown of ceasefire negotiations', 'External arms supplies to proxy groups'],
-  deescalationFactors: ['International mediation efforts ongoing', 'Economic incentives for peace', 'War-weary population favoring dialogue'],
-  economicImpact: 'GDP growth projected to slow by 1.5-2% due to trade disruptions. Foreign direct investment declining as risk premiums increase. Energy sector faces supply chain vulnerabilities.',
-  militaryPosture: 'Armed forces on heightened readiness. Border deployments increased 30% in recent weeks. Air defense systems activated in key strategic areas.',
-  diplomaticStatus: 'Bilateral talks stalled. UN special envoy conducting shuttle diplomacy. Regional bloc emergency session scheduled.',
-  humanitarianConcerns: 'Approximately 200,000 internally displaced persons. Aid corridors partially restricted. Medical supply shortages reported in conflict-adjacent areas.',
+  outlook: 'Stable', // Stable, Unsettled, Active, Disturbed
+  keyActors: ['HAARP Gakona Facility', 'EISCAT Research Association', 'NOAA Space Weather Prediction Center'],
+  escalationFactors: ['Solar flare arrival (M-class or higher)', 'Tropospheric thermal inversion', 'Sudden Stratospheric Warming (SSW) event'],
+  deescalationFactors: ['Coronal hole rotation away from Earth alignment', 'Equatorial wind stabilization', 'Geomagnetic field recovery'],
+  economicImpact: 'Agricultural yields remain stable under normal precipitation cycles. Energy grids report zero solar storm induced geomagnetically induced currents (GICs). Communication sectors operating at peak efficiency.',
+  militaryPosture: 'HF atmospheric radars active and operating at nominal power levels. Satellite telemetry channels report optimal signal-to-noise ratios. Atmospheric radars operating at nominal power levels.',
+  diplomaticStatus: 'Scientific collaboration protocols active. Meteorological data sharing channels open. Space weather monitoring coordinates fully synchronized.',
+  humanitarianConcerns: 'No extreme weather threats active. Seasonal rainfall patterns remain within safe margins. UV index registers low to moderate.',
   topStocks: [
-    { ticker: 'LMT', name: 'Lockheed Martin', reasoning: 'Increased regional defense spending drives demand for advanced weapons systems and missile defense.' },
-    { ticker: 'XOM', name: 'Exxon Mobil', reasoning: 'Energy supply disruptions from regional instability push crude prices higher, benefiting major producers.' },
-    { ticker: 'GLD', name: 'SPDR Gold Trust', reasoning: 'Safe haven flows accelerate as institutional investors hedge geopolitical risk exposure.' }
+    // We repurpose topStocks as key weather parameters for backward-compatibility
+    { ticker: 'TEMP', name: 'Ambient Temperature', reasoning: 'Average tropospheric temperature index.' },
+    { ticker: 'HUMID', name: 'Relative Humidity', reasoning: 'Tropospheric water vapor content.' },
+    { ticker: 'WIND', name: 'Wind Velocity', reasoning: 'Vector wind speed in the lower atmosphere.' }
   ],
-  affectedSectors: ['Defense', 'Energy', 'Precious Metals', 'Insurance', 'Logistics'],
-  historicalParallel: 'Current dynamics bear similarities to the 2014 Crimean crisis — rapid territorial assertions combined with economic sanctions creating a protracted standoff with global market implications.',
-  confidenceLevel: 72
+  affectedSectors: ['Agriculture', 'Aviation Grid', 'Satellite Networks', 'Marine Operations', 'Telecommunications'],
+  historicalParallel: 'Atmospheric conditions resemble the stable post-El Niño winter transition of 2016 with normal trade wind recovery.',
+  confidenceLevel: 85
 };
 
 const DEMO_SIGNAL = {
@@ -146,66 +147,57 @@ router.post('/brief', async (req, res) => {
       : '';
 
     // ---- DEEP AI PROMPT ----
-    const prompt = `You are VERIDIAN AI, a senior geopolitical intelligence analyst producing a DEEP INTELLIGENCE BRIEF for ${country}.
+    const prompt = `You are THOTH Climate & Space Weather Analyst, generating an atmospheric and space weather briefing for ${country}.
 
 TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
 
-=== LIVE INTELLIGENCE FEEDS ===
-
-ACTIVE EVENTS IN/NEAR ${country.toUpperCase()}:
+=== LIVE WEATHER & ATMOSPHERIC READINGS ===
+ACTIVE ENVIRONMENTAL EVENTS IN/NEAR ${country.toUpperCase()}:
   - ${eventSummary}
 
-LATEST NEWS HEADLINES FOR ${country.toUpperCase()}:
+LATEST OBSERVATION STATION UPDATES FOR ${country.toUpperCase()}:
   - ${newsSummary}
 
-MILITARY FLIGHT ACTIVITY NEAR ${country.toUpperCase()}:
-  - ${flightSummary}
-
-CYBER THREAT ACTIVITY FROM ${country.toUpperCase()}:
-  - ${cyberSummary}
-
-GLOBAL CONTEXT:
-  - Total CRITICAL events worldwide: ${globalTensionEvents}
-  - ${cryptoContext ? `Crypto Markets: ${cryptoContext}` : ''}
-  - ${fearGreedContext || ''}
+GLOBAL ENVIRONMENTAL CONTEXT:
+  - Total CRITICAL space weather events worldwide: ${globalTensionEvents}
 
 === YOUR TASK ===
-Produce a comprehensive intelligence assessment. Cross-reference ALL the live data above. Connect events to their economic, military, and diplomatic implications. Be specific — cite the actual events/headlines above in your analysis.
+Produce a comprehensive atmospheric and space weather assessment for ${country}. Cross-reference the live events and observations. Connect anomalies to agricultural impact, communication network vulnerabilities, and regional atmospheric changes.
 
 Return a JSON object with EXACTLY these fields:
 {
-  "briefText": "A 4-5 paragraph DEEP intelligence assessment. Reference specific live events. Analyze cause-and-effect chains. Discuss second-order impacts. This should read like a classified briefing, not a Wikipedia summary.",
-  "stabilityScore": <number 0-100, where 100 is most stable. Compute this based on BOTH the live events provided AND the real-world foundational geopolitical stability of the country (e.g. Ukraine, Russia, Iran, Palestine, Israel, Yemen should naturally start with a very low baseline in the 10-40 range due to ongoing systemic conflicts, even if no breaking events are logged today. Western nations might start 80+). Do NOT simply output 80 or 90 if there are no live events given. Apply real-world reasoning.>,
+  "briefText": "A 4-5 paragraph detailed climate and space weather assessment of ${country}. Reference specific live events and alerts. Discuss atmospheric pressure patterns, storm cycles, and space weather/ionospheric activity (like auroral storms or signal absorption).",
+  "stabilityScore": <number 0-100, representing the Atmospheric Stability Index. Higher means stable weather and quiet space conditions. Lower (10-40) means severe storms, tropical typhoons, active auroras, or ionospheric disturbances. Compute using real-world baseline and live events.>,
   "topRisks": [
-    { "risk": "Detailed risk description referencing live data", "severity": "CRITICAL|HIGH|MEDIUM|LOW" },
+    { "risk": "Detailed weather or atmospheric risk (e.g. solar storm disruption, localized drought, flash flood warning)", "severity": "CRITICAL|HIGH|MEDIUM|LOW" },
     { "risk": "...", "severity": "..." },
     { "risk": "...", "severity": "..." },
     { "risk": "...", "severity": "..." },
     { "risk": "...", "severity": "..." }
   ],
-  "outlook": "<one of: Stable, Deteriorating, Escalating, Crisis>",
-  "keyActors": ["5 key political/military/economic actors and their current posture, based on the live events"],
-  "escalationFactors": ["3-4 specific things that could make the situation worse, derived from the live data"],
-  "deescalationFactors": ["3-4 specific things that could improve the situation"],
-  "economicImpact": "2-3 sentence analysis of how current events affect the country's economy, trade, and currency. Reference live market data if relevant.",
-  "militaryPosture": "2-3 sentence assessment of current military situation. Reference any live flight activity detected.",
-  "diplomaticStatus": "2-3 sentence assessment of diplomatic channels, negotiations, and international response.",
-  "humanitarianConcerns": "2-3 sentence assessment of civilian impact, displacement, and aid status.",
+  "outlook": "<one of: Stable, Unsettled, Active, Disturbed>",
+  "keyActors": ["5 key observation networks, weather stations, or research centers active in or monitoring this sector"],
+  "escalationFactors": ["3-4 specific triggers that could worsen atmospheric disturbances (e.g. solar flare arrival, thermal inversion)"],
+  "deescalationFactors": ["3-4 factors that would stabilize the weather/space conditions"],
+  "economicImpact": "2-3 sentence analysis of how current weather anomalies affect agricultural output, resources, and local water supplies.",
+  "militaryPosture": "2-3 sentence assessment of how ionospheric conditions affect local communication signals and radar performance.",
+  "diplomaticStatus": "2-3 sentence report on international scientific data exchanges and coordinate synchronization for climate research.",
+  "humanitarianConcerns": "2-3 sentence warning on public safety, heat waves, extreme storm alerts, or UV exposure.",
   "topStocks": [
-    { "ticker": "<valid real ticker e.g. LMT, XOM, GLD>", "name": "Full company name", "reasoning": "Detailed reasoning connecting THIS COUNTRY's live events to why this asset benefits" },
-    { "ticker": "...", "name": "...", "reasoning": "..." },
-    { "ticker": "...", "name": "...", "reasoning": "..." }
+    { "ticker": "TEMP", "name": "Ambient Temperature", "reasoning": "A 1-sentence description of the current temperature profile in ${country} (e.g., averaging 28°C under solar exposure)." },
+    { "ticker": "HUMID", "name": "Relative Humidity", "reasoning": "A 1-sentence description of tropospheric water vapor content." },
+    { "ticker": "WIND", "name": "Wind Velocity", "reasoning": "A 1-sentence description of prevailing wind directions and speeds." }
   ],
-  "affectedSectors": ["List of 4-6 economic sectors most impacted by current events"],
-  "historicalParallel": "One specific historical event/period that resembles the current situation, with explanation of similarities and differences",
-  "confidenceLevel": <number 0-100, how confident you are in this assessment based on data quality>
+  "affectedSectors": ["List of 4-6 sectors most affected (e.g., Agriculture, Aviation, Telecommunications, Satellites, Marine)"],
+  "historicalParallel": "One specific historical climate/weather event (e.g., 1997 El Niño phase or Carrington solar storm) that shares features with the current profile, with comparison",
+  "confidenceLevel": <number 0-100, confidence based on available telemetry data quality>
 }`;
 
     const aiResult = await generateAI(prompt);
 
     if (!aiResult) {
-      const baselines = { 'Iran': 35, 'Russia': 40, 'Ukraine': 30, 'Yemen': 25, 'Israel': 45, 'Palestine': 20, 'Syria': 25 };
-      const base = baselines[country] || Math.max(10, 80 - ctx.countryEvents.length * 15);
+      const baselines = { 'Iran': 85, 'Russia': 75, 'Ukraine': 80, 'Yemen': 90, 'Israel': 88, 'Palestine': 88, 'Syria': 85 };
+      const base = baselines[country] || Math.max(10, 90 - ctx.countryEvents.length * 12);
       return res.json({ countryName: country, ...DEMO_BRIEF, stabilityScore: base, demo: true });
     }
 
@@ -250,8 +242,8 @@ Return a JSON object with EXACTLY these fields:
     res.json(brief);
   } catch (err) {
     console.error('[ai/brief] Error:', err.message);
-    const baselines = { 'Iran': 35, 'Russia': 40, 'Ukraine': 30, 'Yemen': 25, 'Israel': 45, 'Palestine': 20, 'Syria': 25 };
-    const base = baselines[req.body?.country] || 62;
+    const baselines = { 'Iran': 85, 'Russia': 75, 'Ukraine': 80, 'Yemen': 90, 'Israel': 88, 'Palestine': 88, 'Syria': 85 };
+    const base = baselines[req.body?.country] || 82;
     res.json({ countryName: req.body?.country || 'Unknown', ...DEMO_BRIEF, stabilityScore: base, demo: true });
   }
 });

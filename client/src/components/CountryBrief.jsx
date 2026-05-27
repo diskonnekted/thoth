@@ -19,7 +19,7 @@ import TerminalLoader from './TerminalLoader';
 import RedactedText from './RedactedText';
 import ScrambleText from './ScrambleText';
 import DroneFeed from './DroneFeed';
-import { RadialBarChart, RadialBar, ResponsiveContainer } from 'recharts';
+import { RadialBarChart, RadialBar, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import MarketGraph from './MarketGraph';
 import { exportBrief, copyToClipboard, downloadReport } from '../utils/exportReport';
 import ExportButton from './ExportButton';
@@ -45,6 +45,34 @@ function getScoreColor(score) {
   return 'var(--color-red)';
 }
 
+/**
+ * Generates mock climatology seasonal trends based on country name seed.
+ */
+function getClimatologyData(param, countryName) {
+  const hash = (countryName || 'Global').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const baseTemp = 8 + (hash % 20); // range 8 to 28 C
+  const baseHumid = 45 + (hash % 35); // range 45 to 80 %
+  const baseWind = 6 + (hash % 14); // range 6 to 20 km/h
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  return months.map((m, idx) => {
+    const seasonalFactor = Math.sin((idx / 11) * Math.PI);
+    let val = 0;
+    if (param === 'TEMP') {
+      val = baseTemp + seasonalFactor * 7 + Math.sin(idx * 1.5) * 1.5;
+    } else if (param === 'HUMID') {
+      val = baseHumid - seasonalFactor * 12 + Math.cos(idx * 1.2) * 4;
+    } else {
+      val = baseWind + seasonalFactor * 3.5 + Math.sin(idx * 2) * 2;
+    }
+    return {
+      name: m,
+      value: parseFloat(Math.max(0, val).toFixed(1))
+    };
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Static data maps
 // ---------------------------------------------------------------------------
@@ -54,10 +82,10 @@ function getScoreColor(score) {
  * Used to render a small icon next to the outlook badge.
  */
 const OUTLOOK_ICONS = {
-  Stable: 'fa-solid fa-shield-check',
-  Deteriorating: 'fa-solid fa-chart-line',
-  Escalating: 'fa-solid fa-arrow-trend-up',
-  Crisis: 'fa-solid fa-triangle-exclamation',
+  Stable: 'fa-solid fa-cloud-sun',
+  Unsettled: 'fa-solid fa-cloud-sun-rain',
+  Active: 'fa-solid fa-cloud-bolt',
+  Disturbed: 'fa-solid fa-triangle-exclamation',
 };
 
 /**
@@ -119,9 +147,9 @@ const SectionHeader = ({ icon, iconColor, title }) => (
  */
 const SECTIONS = [
   { id: 'overview',   label: 'Overview',   icon: 'fa-eye' },
-  { id: 'military',   label: 'Military',   icon: 'fa-jet-fighter' },
-  { id: 'economic',   label: 'Economic',   icon: 'fa-chart-line' },
-  { id: 'diplomatic', label: 'Diplomatic', icon: 'fa-handshake' },
+  { id: 'atmosphere', label: 'Atmosphere', icon: 'fa-wave-square' },
+  { id: 'climatology', label: 'Climatology', icon: 'fa-wind' },
+  { id: 'advisories', label: 'Advisories',  icon: 'fa-bell' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -328,7 +356,7 @@ export default function CountryBrief({ country, onClose }) {
 
         {/* Loading state: terminal-style animated loader */}
         {loading ? (
-          <TerminalLoader context={`ANALYZING GEO-POLITICAL NODE: ${country.toUpperCase()}`} />
+          <TerminalLoader context={`ANALYZING ATMOSPHERIC NODE: ${country.toUpperCase()}`} />
 
         ) : brief ? (
           <>
@@ -371,7 +399,7 @@ export default function CountryBrief({ country, onClose }) {
                     >
                       {brief.stabilityScore}
                     </div>
-                    <div className="text-muted text-xs">Stability Score</div>
+                    <div className="text-muted text-xs">Atmospheric Stability</div>
 
                     {/* Outlook pill badge */}
                     <span className={`outlook-${brief.outlook} px-2 py-0.5 rounded-full text-[9px] font-medium flex items-center gap-1 mt-1 w-fit`}>
@@ -388,7 +416,7 @@ export default function CountryBrief({ country, onClose }) {
                   <>
                     {/* Top risk items with severity colour coding */}
                     <div>
-                      <SectionHeader icon="fa-solid fa-shield-halved" iconColor="var(--color-red)" title="Top Risks" />
+                      <SectionHeader icon="fa-solid fa-cloud-bolt" iconColor="var(--color-red)" title="Active Climate Advisories" />
                       {(brief.topRisks || []).map((riskItem, i) => {
                         // Normalise: the API may return either a plain string or an object
                         const risk = typeof riskItem === 'string'
@@ -417,7 +445,7 @@ export default function CountryBrief({ country, onClose }) {
 
                     {/* Classified assessment text with redaction effect */}
                     <div>
-                      <SectionHeader icon="fa-solid fa-file-lines" title="Classified Assessment" />
+                      <SectionHeader icon="fa-solid fa-file-lines" title="Meteorological Assessment" />
                       {brief.briefText?.split('\n').filter(Boolean).map((para, i) => (
                         <p key={i} className="font-medium text-[11px] leading-relaxed mb-2" style={{ color: 'var(--color-text-secondary)' }}>
                           {/* RedactedText randomly obscures words to simulate a classified document */}
@@ -428,7 +456,7 @@ export default function CountryBrief({ country, onClose }) {
 
                     {/* Simulated OSINT drone-feed widget */}
                     <div>
-                      <SectionHeader icon="fa-solid fa-satellite" iconColor="var(--color-green)" title="Live OSINT Telemetry" />
+                      <SectionHeader icon="fa-solid fa-satellite" iconColor="var(--color-green)" title="Space Weather Live Telemetry" />
                       {/*
                         DroneFeed renders an animated surveillance-style feed.
                         lat/lng are repurposed from confidenceLevel/stabilityScore
@@ -493,19 +521,19 @@ export default function CountryBrief({ country, onClose }) {
                 )}
 
                 {/* -------------------------------------------------------- */}
-                {/* MILITARY TAB                                              */}
+                {/* ATMOSPHERE TAB                                           */}
                 {/* -------------------------------------------------------- */}
-                {activeSection === 'military' && (
+                {activeSection === 'atmosphere' && (
                   <>
                     {brief.militaryPosture && (
                       <div>
-                        <SectionHeader icon="fa-solid fa-jet-fighter" iconColor="var(--color-red)" title="Military Posture" />
+                        <SectionHeader icon="fa-solid fa-wave-square" iconColor="var(--color-red)" title="Ionospheric Radar Posture" />
                         <p className="text-[11px] text-white/60 leading-relaxed">{brief.militaryPosture}</p>
                       </div>
                     )}
                     {brief.humanitarianConcerns && (
                       <div>
-                        <SectionHeader icon="fa-solid fa-hand-holding-heart" iconColor="var(--color-yellow)" title="Humanitarian Assessment" />
+                        <SectionHeader icon="fa-solid fa-cloud-sun" iconColor="var(--color-yellow)" title="Tropospheric Climate Assessment" />
                         <p className="text-[11px] text-white/60 leading-relaxed">{brief.humanitarianConcerns}</p>
                       </div>
                     )}
@@ -513,20 +541,20 @@ export default function CountryBrief({ country, onClose }) {
                 )}
 
                 {/* -------------------------------------------------------- */}
-                {/* ECONOMIC TAB                                              */}
+                {/* CLIMATOLOGY TAB                                          */}
                 {/* -------------------------------------------------------- */}
-                {activeSection === 'economic' && (
+                {activeSection === 'climatology' && (
                   <>
                     {brief.economicImpact && (
                       <div>
-                        <SectionHeader icon="fa-solid fa-chart-line" iconColor="var(--color-cyan)" title="Economic Impact" />
+                        <SectionHeader icon="fa-solid fa-wind" iconColor="var(--color-cyan)" title="Agricultural & Resource Impact" />
                         <p className="text-[11px] text-white/60 leading-relaxed">{brief.economicImpact}</p>
                       </div>
                     )}
                     {brief.affectedSectors?.length > 0 && (
                       <div>
-                        <SectionHeader icon="fa-solid fa-industry" iconColor="var(--color-gold)" title="Affected Sectors" />
-                        {/* Pill tags for each affected industry sector */}
+                        <SectionHeader icon="fa-solid fa-circle-exclamation" iconColor="var(--color-gold)" title="Primary Vulnerable Sectors" />
+                        {/* Pill tags for each affected sector */}
                         <div className="flex flex-wrap gap-1.5">
                           {brief.affectedSectors.map((s, i) => (
                             <span
@@ -543,13 +571,13 @@ export default function CountryBrief({ country, onClose }) {
                 )}
 
                 {/* -------------------------------------------------------- */}
-                {/* DIPLOMATIC TAB                                            */}
+                {/* ADVISORIES TAB                                           */}
                 {/* -------------------------------------------------------- */}
-                {activeSection === 'diplomatic' && (
+                {activeSection === 'advisories' && (
                   <>
                     {brief.diplomaticStatus && (
                       <div>
-                        <SectionHeader icon="fa-solid fa-handshake" iconColor="var(--color-cyan)" title="Diplomatic Status" />
+                        <SectionHeader icon="fa-solid fa-handshake" iconColor="var(--color-cyan)" title="Collaborative Scientific Channels" />
                         <p className="text-[11px] text-white/60 leading-relaxed">{brief.diplomaticStatus}</p>
                       </div>
                     )}
@@ -559,7 +587,7 @@ export default function CountryBrief({ country, onClose }) {
                 {/* Source headlines shown across all tabs */}
                 {brief.sourceHeadlines?.length > 0 && (
                   <div>
-                    <SectionHeader icon="fa-solid fa-newspaper" title="Source Headlines" />
+                    <SectionHeader icon="fa-solid fa-newspaper" title="Station Bulletins" />
                     {brief.sourceHeadlines.map((h, i) => (
                       <div key={i} className="flex items-start gap-2 text-[10px] py-1" style={{ color: 'var(--color-text-muted)' }}>
                         <i className="fa-solid fa-link mt-0.5" style={{ fontSize: 8 }}></i>
@@ -571,15 +599,15 @@ export default function CountryBrief({ country, onClose }) {
               </div>
 
               {/* ---------------------------------------------------------- */}
-              {/* RIGHT COLUMN — Asset / stock chart panel (conditional)      */}
+              {/* RIGHT COLUMN — Seasonal Weather Chart                       */}
               {/* ---------------------------------------------------------- */}
               {hasAssets && (
                 <div className="flex-1 flex flex-col pl-6 pr-2 h-full gap-4">
 
-                  {/* Ticker selector tabs */}
+                  {/* Parameter selector tabs */}
                   <div className="flex items-center gap-3">
-                    <div className="text-xs text-muted uppercase tracking-wider mr-2">
-                      <i className="fa-solid fa-shapes"></i> Selected Asset
+                    <div className="text-[10px] text-white/40 uppercase tracking-widest mr-2 flex items-center gap-1.5">
+                      <i className="fa-solid fa-cloud-sun text-[var(--color-cyan)]"></i> Atmospheric Sensor
                     </div>
                     <div
                       className="flex p-1 rounded-lg"
@@ -589,7 +617,7 @@ export default function CountryBrief({ country, onClose }) {
                         <button
                           key={idx}
                           onClick={() => setSelectedStockIdx(idx)}
-                          className="px-4 py-1.5 rounded-md text-xs font-mono-num font-bold transition-colors cursor-pointer"
+                          className="px-4 py-1.5 rounded-md text-[10px] font-mono font-bold transition-colors cursor-pointer uppercase tracking-wider"
                           style={{
                             background: selectedStockIdx === idx ? 'rgba(0,212,255,0.1)' : 'transparent',
                             color: selectedStockIdx === idx ? 'var(--color-cyan)' : 'var(--color-text-muted)',
@@ -602,12 +630,33 @@ export default function CountryBrief({ country, onClose }) {
                     </div>
                   </div>
 
-                  {/* Market chart for the currently selected ticker */}
-                  <div className="flex-1 w-full relative">
-                    <MarketGraph
-                      stock={brief.topStocks[selectedStockIdx]}
-                      stabilityScore={brief.stabilityScore}
-                    />
+                  {/* Sensor description */}
+                  <div className="bg-white/[0.02] border border-white/[0.04] p-3 rounded text-[10px] font-mono text-white/70">
+                    <div className="text-[var(--color-cyan)] font-bold uppercase tracking-wider mb-1">
+                      {brief.topStocks[selectedStockIdx]?.name}
+                    </div>
+                    <div className="text-white/50 leading-relaxed">
+                      {brief.topStocks[selectedStockIdx]?.reasoning}
+                    </div>
+                  </div>
+
+                  {/* Climate Chart */}
+                  <div className="flex-1 w-full relative min-h-[220px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={getClimatologyData(brief.topStocks[selectedStockIdx]?.ticker, country)} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="weatherGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="var(--color-cyan)" stopOpacity={0.25} />
+                            <stop offset="100%" stopColor="var(--color-cyan)" stopOpacity={0.01} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
+                        <XAxis dataKey="name" stroke="rgba(255,255,255,0.2)" fontSize={8} />
+                        <YAxis stroke="rgba(255,255,255,0.2)" fontSize={8} />
+                        <Tooltip contentStyle={{ background: '#080F20', border: '1px solid rgba(255,255,255,0.1)', fontSize: 9 }} />
+                        <Area type="monotone" dataKey="value" stroke="var(--color-cyan)" fill="url(#weatherGrad)" strokeWidth={1.5} dot={{ r: 2 }} name={brief.topStocks[selectedStockIdx]?.name} />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
               )}

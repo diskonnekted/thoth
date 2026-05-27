@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import GlobeGL from 'react-globe.gl';
+import { useToast } from './ToastNotifications';
 
 // ── Severity color palette — used for event points and arc gradients ──────────
 const SEVERITY_COLORS = {
@@ -41,9 +42,9 @@ const SEVERITY_SIZE = {
   LOW: 0.03,
 };
 
-// ── Inline SVG for airplane marker (north-pointing, rotated per heading in DOM) ──
+// ── Inline SVG for station marker (radio tower shape) ──────────────────────────
 const AIRPLANE_SVG = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-  <path d="M12 2 L10.5 8 L4 11 L4 12.5 L10.5 10.5 L10 18 L7 20 L7 21.5 L12 19.5 L17 21.5 L17 20 L14 18 L13.5 10.5 L20 12.5 L20 11 L13.5 8 Z" fill="currentColor"/>
+  <path d="M12 2c-.8 0-1.5.7-1.5 1.5c0 .5.3.9.7 1.2L7.3 18H6v2h12v-2h-1.3l-3.9-13.3c.4-.3.7-.7.7-1.2c0-.8-.7-1.5-1.5-1.5zm0 1c.3 0 .5.2.5.5s-.2.5-.5.5s-.5-.2-.5-.5s.2-.5.5-.5z" fill="currentColor"/>
 </svg>`;
 
 // ── Font Awesome ship icon for vessel markers ─────────────────────────────────
@@ -76,6 +77,109 @@ export default function Globe({
   const [hoveredPolygon, setHoveredPolygon] = useState(null);   // Currently hovered country feature
   const [selectedFlight, setSelectedFlight] = useState(null);   // Flight with active route arc
   const [selectedVessel, setSelectedVessel] = useState(null);   // Vessel with active route arc
+
+  const toast = useToast();
+  const [orbitalTime, setOrbitalTime] = useState(0);
+
+  // ── Orbit Animation Loop ──────────────────────────────────────────────────
+  useEffect(() => {
+    let animId;
+    const update = () => {
+      setOrbitalTime(t => t + 0.003); // control the speed of orbit
+      animId = requestAnimationFrame(update);
+    };
+    animId = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
+  // ── Orbits dashed paths data ──────────────────────────────────────────────
+  const orbitsPaths = useMemo(() => {
+    const numPoints = 120;
+    
+    // NOAA-20: polar plane
+    const noaaCoords = [];
+    for (let i = 0; i <= numPoints; i++) {
+      const pct = i / numPoints;
+      const lat = 90 * Math.sin(pct * 2 * Math.PI);
+      const lng = pct < 0.5 ? -100 : 80;
+      noaaCoords.push([lat, lng, 0.35]);
+    }
+
+    // GOES-16: equatorial orbit with slight incline
+    const goesCoords = [];
+    for (let i = 0; i <= numPoints; i++) {
+      const pct = i / numPoints;
+      const angle = pct * 2 * Math.PI;
+      const lat = 3 * Math.sin(angle);
+      const lng = -75.2 + 2 * Math.cos(angle);
+      goesCoords.push([lat, lng, 0.4]);
+    }
+
+    // HIMAWARI-9: equatorial
+    const himawariCoords = [];
+    for (let i = 0; i <= numPoints; i++) {
+      const pct = i / numPoints;
+      const angle = pct * 2 * Math.PI;
+      const lat = 2 * Math.sin(angle);
+      const lng = 140.7 + 1.5 * Math.cos(angle);
+      himawariCoords.push([lat, lng, 0.4]);
+    }
+
+    // METEOSAT-11: equatorial
+    const meteosatCoords = [];
+    for (let i = 0; i <= numPoints; i++) {
+      const pct = i / numPoints;
+      const angle = pct * 2 * Math.PI;
+      const lat = 1.5 * Math.sin(angle);
+      const lng = 0.0 + 1.2 * Math.cos(angle);
+      meteosatCoords.push([lat, lng, 0.4]);
+    }
+
+    // METEOR-M2: inclined orbit
+    const meteorCoords = [];
+    for (let i = 0; i <= numPoints; i++) {
+      const pct = i / numPoints;
+      const angle = pct * 2 * Math.PI;
+      const lat = 82 * Math.sin(angle);
+      const lng = ((pct * 360 + 120) % 360) - 180;
+      meteorCoords.push([lat, lng, 0.33]);
+    }
+
+    return [
+      { name: 'NOAA-20', coords: noaaCoords, color: 'rgba(0, 255, 136, 0.35)', stroke: 1 },
+      { name: 'GOES-16', coords: goesCoords, color: 'rgba(0, 212, 255, 0.35)', stroke: 1 },
+      { name: 'HIMAWARI-9', coords: himawariCoords, color: 'rgba(234, 179, 8, 0.35)', stroke: 1 },
+      { name: 'METEOSAT-11', coords: meteosatCoords, color: 'rgba(139, 92, 246, 0.35)', stroke: 1 },
+      { name: 'METEOR-M2', coords: meteorCoords, color: 'rgba(236, 72, 153, 0.35)', stroke: 1 },
+    ];
+  }, []);
+
+  // ── Real-time satellite positions ─────────────────────────────────────────
+  const satellitesData = useMemo(() => {
+    // Current positions using orbitalTime
+    const noaaLat = 90 * Math.sin(orbitalTime * 0.8);
+    const noaaLng = Math.sin(orbitalTime * 0.8) >= 0 ? -100 : 80;
+
+    const goesLat = 3 * Math.sin(orbitalTime * 1.2);
+    const goesLng = -75.2 + 2 * Math.cos(orbitalTime * 1.2);
+
+    const himawariLat = 2 * Math.sin(orbitalTime * 1.5);
+    const himawariLng = 140.7 + 1.5 * Math.cos(orbitalTime * 1.5);
+
+    const meteosatLat = 1.5 * Math.sin(orbitalTime * 1.0);
+    const meteosatLng = 0.0 + 1.2 * Math.cos(orbitalTime * 1.0);
+
+    const meteorLat = 82 * Math.sin(orbitalTime * 0.9);
+    const meteorLng = ((orbitalTime * 0.9 * (180 / Math.PI) + 120) % 360) - 180;
+
+    return [
+      { name: 'NOAA-20', lat: noaaLat, lng: noaaLng, alt: 0.35, color: '#00FF88', status: 'ACTIVE', mission: 'Polar Weather Scanner', sensor: 'VIIRS / CrIS' },
+      { name: 'GOES-16', lat: goesLat, lng: goesLng, alt: 0.4, color: '#00D4FF', status: 'ACTIVE', mission: 'GOES East Meteorological', sensor: 'ABI (Advanced Baseline Imager)' },
+      { name: 'HIMAWARI-9', lat: himawariLat, lng: himawariLng, alt: 0.4, color: '#EAB308', status: 'ACTIVE', mission: 'West-Pacific Meteorological', sensor: 'AHI (Advanced Himawari Imager)' },
+      { name: 'METEOSAT-11', lat: meteosatLat, lng: meteosatLng, alt: 0.4, color: '#8B5CF6', status: 'ACTIVE', mission: 'Europe-Africa Climate Monitor', sensor: 'SEVIRI Scanner' },
+      { name: 'METEOR-M2', lat: meteorLat, lng: meteorLng, alt: 0.33, color: '#EC4899', status: 'STANDBY', mission: 'Roscosmos Polar Sounder', sensor: 'MSU-MR Radiometer' },
+    ];
+  }, [orbitalTime]);
 
   // ── Fetch GeoJSON country borders on mount ────────────────────────────────
   // Empty deps: runs once. Populates polygonsData for the country fill layer.
@@ -437,7 +541,7 @@ export default function Globe({
     `;
 
     // Native tooltip on hover (no React tooltip needed)
-    el.title = `${d.callsign} | ${d.aircraftType || 'Tactical'} | ALT ${d.altitude}ft | ${d.velocity}kts | HDG ${d.heading}°`;
+    el.title = `${d.callsign} | ${d.aircraftType || 'STATION'} | STATUS: ${d.isSurge ? 'ACTIVE' : d.isNearConflict ? 'STANDBY' : 'IDLE'} | ${d.flightData?.location || ''}`;
 
     // Click: select flight + fire parent callback.
     // blockCountryClick prevents the globe's polygon click from also firing
@@ -529,12 +633,89 @@ export default function Globe({
     return el;
   }, [onVesselClick]);
 
+  // ── Satellite HTML marker factory ──────────────────────────────────────────
+  const createSatelliteElement = useCallback((d) => {
+    const el = document.createElement('div');
+    el.style.cursor = 'pointer';
+    el.style.pointerEvents = 'auto';
+
+    el.innerHTML = `
+      <div style="
+        position: relative;
+        width: 24px;
+        height: 24px;
+        color: ${d.color};
+        filter: drop-shadow(0 0 5px ${d.color}) drop-shadow(0 0 10px ${d.color});
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <i class="fa-solid fa-satellite text-[13px] animate-pulse"></i>
+      </div>
+      <div style="
+        position: absolute;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 7px;
+        font-weight: 700;
+        color: ${d.color};
+        text-shadow: 0 0 3px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.8);
+        letter-spacing: 0.05em;
+        pointer-events: none;
+        text-align: center;
+        opacity: 0.9;
+      ">${d.name}</div>
+    `;
+
+    el.title = `${d.name} (${d.mission}) | SENSOR: ${d.sensor} | ALT: ${Math.round(d.altitude * 6371 + 6371)}km | STATUS: ${d.status}`;
+
+    // Click: show custom toast notifications via ToastProvider context
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      blockCountryClick.current = true;
+      if (toast?.addToast) {
+        toast.addToast({
+          type: 'INFO',
+          title: `TELEMETRY DOWNLINK: ${d.name}`,
+          subtitle: `MISSION: ${d.mission} • SENSOR: ${d.sensor} • STATUS: ${d.status} • COORDS: ${d.lat.toFixed(2)}°N, ${d.lng.toFixed(2)}°E`,
+        });
+      }
+      setTimeout(() => { blockCountryClick.current = false; }, 200);
+    });
+
+    // Hover scale effect
+    el.addEventListener('mouseenter', () => {
+      el.firstElementChild.style.transform = 'scale(1.3)';
+    });
+    el.addEventListener('mouseleave', () => {
+      el.firstElementChild.style.transform = 'scale(1)';
+    });
+
+    return el;
+  }, [toast]);
+
   // ── Combined HTML marker array ────────────────────────────────────────────
   // GlobeGL's htmlElementsData takes a single flat array; type field routes
   // each item to the correct factory in the htmlElement prop function below.
   const allHtmlElements = useMemo(() => {
-    return [...flightMarkersData, ...vesselMarkersData];
-  }, [flightMarkersData, vesselMarkersData]);
+    const satelliteMarkers = satellitesData.map((sat, i) => ({
+      lat: sat.lat,
+      lng: sat.lng,
+      altitude: sat.alt,
+      name: sat.name,
+      mission: sat.mission,
+      sensor: sat.sensor,
+      color: sat.color,
+      status: sat.status,
+      id: `sat_${sat.name}_${i}`,
+      type: 'satellite'
+    }));
+
+    return [...flightMarkersData, ...vesselMarkersData, ...satelliteMarkers];
+  }, [flightMarkersData, vesselMarkersData, satellitesData]);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -578,13 +759,25 @@ export default function Globe({
         hexAltitude={(d) => Math.min(0.2, d.sumWeight * 0.01)} // Height scales with weight, capped at 0.2
         hexTransitionDuration={1000} // Smooth 1s transition when data updates
 
-        // ── HTML marker layer (flights + vessels) ───────────────────────────
-        // htmlElement is called per item — routes to airplane or vessel factory by type field
+        // ── HTML marker layer (flights + vessels + weather satellites) ──────
+        // htmlElement is called per item — routes to airplane, vessel, or satellite factory by type field
         htmlElementsData={allHtmlElements}
         htmlLat="lat"
         htmlLng="lng"
-        htmlAltitude={(d) => d.type === 'flight' ? 0.005 : 0.001} // Flights render slightly above vessels
-        htmlElement={(d) => d.type === 'flight' ? createAirplaneElement(d) : createVesselElement(d)}
+        htmlAltitude={(d) => d.type === 'satellite' ? d.altitude : d.type === 'flight' ? 0.005 : 0.001} // Satellites orbit high in the atmosphere
+        htmlElement={(d) => d.type === 'satellite' ? createSatelliteElement(d) : d.type === 'flight' ? createAirplaneElement(d) : createVesselElement(d)}
+
+        // ── Satellites Orbits (Paths) layer ──────────────────────────────────
+        pathsData={orbitsPaths}
+        pathPoints="coords"
+        pathPointLat={(d) => d[0]}
+        pathPointLng={(d) => d[1]}
+        pathPointAlt={(d) => d[2]}
+        pathColor={(d) => d.color}
+        pathStroke={(d) => d.stroke || 1}
+        pathDashLength={0.15}
+        pathDashGap={0.1}
+        pathDashAnimateTime={7000}
 
         // ── Arc layer ───────────────────────────────────────────────────────
         // Single layer handles all arc types (threat rings, sat beams, route arcs)

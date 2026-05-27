@@ -25,7 +25,7 @@ export function UIProvider({ children }) {
   // ─── UI State ─────────────────────────────────────────────
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [flyToTarget, setFlyToTarget] = useState(null);
-  const [showFlights, setShowFlights] = useState(true);
+  const [showFlights, setShowFlights] = useState(false);
   const [showVessels, setShowVessels] = useState(false);
   const [showCyber, setShowCyber] = useState(false);
   const [showRegions, setShowRegions] = useState(false);

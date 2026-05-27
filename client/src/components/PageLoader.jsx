@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 const LOADING_TASKS = [
-  { id: 'geo', label: 'STRATEGIC DATA STREAM' },
-  { id: 'globe', label: '3D RENDERER ONLINE' },
-  { id: 'neural', label: 'MARKET IMPACT NEURAL ENGINE' }
+  { id: 'geo', label: 'IONOSPHERIC DATASTREAM' },
+  { id: 'globe', label: '3D MAGNETOSPHERE MODEL' },
+  { id: 'neural', label: 'HAARP DIAGNOSTIC RECEIVERS' }
 ];
 
 export default function PageLoader({ onComplete }) {
@@ -49,12 +49,21 @@ export default function PageLoader({ onComplete }) {
       <div className="relative z-10 flex flex-col items-center max-w-md w-full px-6">
         {/* Branding */}
         <div className="mb-14 text-center">
-          <div className="text-[#00D4FF] text-4xl mb-2 tracking-[0.3em] font-heading lowercase flex items-center justify-center drop-shadow-[0_0_20px_rgba(0,212,255,0.2)]">
-             <span className="border-2 border-[#00D4FF]/60 px-2 mr-2 animate-pulse">V</span>
-             VERIDIAN
+          <div className="text-[#00D4FF] text-4xl mb-2 tracking-[0.3em] font-heading lowercase flex items-center justify-center gap-3.5 drop-shadow-[0_0_20px_rgba(0,212,255,0.2)]">
+            <div className="w-11 h-11 rounded border border-[#00D4FF]/50 p-[2px] overflow-hidden bg-black/40 flex items-center justify-center animate-pulse">
+              <img 
+                src="/thoth.jpg" 
+                alt="THOTH Logo" 
+                className="w-full h-full object-cover rounded-sm"
+                style={{
+                  filter: 'grayscale(100%) sepia(100%) hue-rotate(150deg) saturate(2.5) brightness(1.1) contrast(1.2)'
+                }}
+              />
+            </div>
+             THOTH
           </div>
-          <div className="text-[#00D4FF]/60 text-[10px] tracking-[0.5em] uppercase">
-            SYSTEM CORE ONLINE
+          <div className="text-[#00D4FF]/60 text-[10px] tracking-[0.35em] uppercase">
+            HAARP MONITOR HUB ONLINE
           </div>
         </div>
 
@@ -93,8 +102,8 @@ export default function PageLoader({ onComplete }) {
         </div>
 
         {/* Footer */}
-        <div className="text-white/15 text-[9px] tracking-[0.8em] uppercase mt-4">
-          The World. Decoded.
+        <div className="text-white/15 text-[8px] tracking-[0.3em] uppercase mt-4 text-center">
+          Telemetry HAARP Observation & Tracking Hub
         </div>
       </div>
     </div>

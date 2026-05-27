@@ -268,14 +268,20 @@ export default function LandingPage() {
 
       {/* ─── NAVBAR ─── */}
       <nav className="landing-nav">
-        <div className="landing-nav-brand">
-          <i className="fa-solid fa-satellite-dish landing-nav-icon" />
-          <span className="landing-nav-title">VERIDIAN</span>
+        <div className="landing-nav-brand flex items-center gap-2">
+          <div className="w-8 h-8 rounded border border-[var(--color-cyan)]/25 p-[2px] overflow-hidden bg-black/40 flex items-center justify-center shadow-[0_0_8px_rgba(0,212,255,0.2)]">
+            <img 
+              src="/thoth.jpg" 
+              alt="THOTH Logo" 
+              className="w-full h-full object-cover rounded"
+              style={{
+                filter: 'grayscale(100%) sepia(100%) hue-rotate(150deg) saturate(2.5) brightness(1.1) contrast(1.2)'
+              }}
+            />
+          </div>
+          <span className="landing-nav-title">THOTH</span>
         </div>
         <div className="landing-nav-links">
-          <a href="#features" className="landing-nav-link">Features</a>
-          <a href="#signals" className="landing-nav-link">Signals</a>
-          <a href="#compare" className="landing-nav-link">Compare</a>
           <button onClick={() => navigate('/command')} className="landing-nav-cta">
             <i className="fa-solid fa-terminal" />&nbsp; Enter Command Center
           </button>
@@ -286,24 +292,23 @@ export default function LandingPage() {
       <section className={`landing-hero ${isVisible ? 'visible' : ''}`}>
         <div className="landing-hero-badge">
           <span className="landing-hero-badge-dot" />
-          <span>REAL-TIME INTELLIGENCE ACTIVE</span>
+          <span>HAARP DIAGNOSTIC MONITOR ACTIVE</span>
         </div>
 
         <h1 className="landing-hero-title">
-          <span className="landing-hero-line1">Every Tool Shows You</span>
-          <span className="landing-hero-line2">WHAT</span>
-          <span className="landing-hero-line1">Is Happening.</span>
+          <span className="landing-hero-line1">Ionospheric Mapping &</span>
+          <span className="landing-hero-line2">HAARP</span>
+          <span className="landing-hero-line1">Telemetry Station.</span>
           <span className="landing-hero-line3">
-            VERIDIAN Tells You&nbsp;
-            <span className="landing-hero-accent">WHAT TO DO</span>
-            &nbsp;About It.
+            Real-time diagnostics &nbsp;
+            <span className="landing-hero-accent">Space Weather</span>
+            &nbsp; Analysis.
           </span>
         </h1>
 
         <p className="landing-hero-sub">
-          Real-time geopolitical intelligence + AI-driven trading signals.
-          From world event to financial action in <span className="landing-hero-highlight">under 30 seconds</span>.
-          Zero cost. Zero login. Enterprise-grade.
+          Cross-referencing magnetometer, riometer, VLF, and ionosonde sweeps.
+          Interactive WebGL 3D Globe and 2D tactical maps tracking active auroral research facilities.
         </p>
 
         <div className="landing-hero-actions">
@@ -312,95 +317,7 @@ export default function LandingPage() {
             <span>LAUNCH COMMAND CENTER</span>
             <div className="landing-cta-shine" />
           </button>
-          <a href="#features" className="landing-cta-secondary">
-            <i className="fa-solid fa-arrow-down" />
-            <span>Explore Features</span>
-          </a>
         </div>
-
-        {/* Live Stats */}
-        <div className="landing-stats">
-          {[
-            { icon: 'fa-earth-americas', value: stats.events, suffix: '+', label: 'Events Tracked', color: 'var(--color-red)' },
-            { icon: 'fa-brain', value: stats.signals, suffix: '+', label: 'AI Signals Generated', color: 'var(--color-green)' },
-            { icon: 'fa-flag', value: stats.countries, suffix: '', label: 'Countries Monitored', color: 'var(--color-cyan)' },
-            { icon: 'fa-jet-fighter', value: stats.flights, suffix: '+', label: 'Military Flights', color: 'var(--color-gold)' },
-          ].map((s, i) => (
-            <div key={i} className="landing-stat">
-              <i className={`fa-solid ${s.icon}`} style={{ color: s.color }} />
-              <span className="landing-stat-value" style={{ color: s.color }}>
-                <AnimatedCounter target={s.value} suffix={s.suffix} duration={1800 + i * 200} />
-              </span>
-              <span className="landing-stat-label">{s.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── SIGNAL DEMO ─── */}
-      <section id="signals" className="landing-section">
-        <div className="landing-section-label">
-          <i className="fa-solid fa-chart-line" style={{ color: 'var(--color-green)' }} />
-          <span>THE 30-SECOND ADVANTAGE</span>
-        </div>
-        <h2 className="landing-section-title">
-          From Geopolitical Event to<br />
-          <span style={{ color: 'var(--color-green)' }}>Financial Signal</span> in Seconds
-        </h2>
-        <p className="landing-section-sub">
-          While institutional traders spend $24,000/year and still rely on manual analysis,
-          VERIDIAN's AI autonomously converts live OSINT into actionable BUY/SELL/HOLD signals.
-        </p>
-        <SignalDemo />
-      </section>
-
-      {/* ─── FEATURES ─── */}
-      <section id="features" className="landing-section">
-        <div className="landing-section-label">
-          <i className="fa-solid fa-layer-group" style={{ color: 'var(--color-cyan)' }} />
-          <span>CAPABILITIES</span>
-        </div>
-        <h2 className="landing-section-title">
-          A Complete Intelligence<br />
-          <span style={{ color: 'var(--color-cyan)' }}>Command Center</span>
-        </h2>
-
-        <div className="landing-features-grid">
-          <FeatureCard delay={0.1} icon="fa-brain" color="var(--color-green)"
-            title="GeoTrade AI Signal Engine"
-            description="Groq LLaMA 3.1 reads live geopolitical events and auto-generates BUY/SELL/HOLD signals with confidence scoring and correlated asset watchlists." />
-          <FeatureCard delay={0.2} icon="fa-earth-americas" color="var(--color-cyan)"
-            title="Live 3D Intelligence Globe"
-            description="WebGL globe with real-time event dots, severity heatmaps, military flight arcs, and click-to-brief country intelligence — all on one surface." />
-          <FeatureCard delay={0.3} icon="fa-jet-fighter" color="var(--color-gold)"
-            title="Military Flight Tracker"
-            description="Live aircraft positions from OpenSky Network. Conflict proximity alerts, surge detection, and tactical aircraft inspection popups." />
-          <FeatureCard delay={0.4} icon="fa-shield-halved" color="var(--color-red)"
-            title="AI Wargame Simulator"
-            description="Select any CRITICAL event and simulate 3 branching futures with probability scores, market cascades, and actionable trade recommendations." />
-          <FeatureCard delay={0.5} icon="fa-tower-broadcast" color="var(--color-orange)"
-            title="Multi-Source News Feed"
-            description="150+ global sources aggregated, severity-coded, and cross-referenced. BREAKING detection, country flags, and entity-linked globe navigation." />
-          <FeatureCard delay={0.6} icon="fa-virus" color="var(--color-purple)"
-            title="Cyber Threat Layer"
-            description="Live botnet C2 servers and malware hosts from abuse.ch overlaid on the globe. Real-time cyber threat map correlated with geopolitical events." />
-        </div>
-      </section>
-
-      {/* ─── COMPARISON ─── */}
-      <section id="compare" className="landing-section">
-        <div className="landing-section-label">
-          <i className="fa-solid fa-scale-balanced" style={{ color: 'var(--color-gold)' }} />
-          <span>COMPETITIVE ANALYSIS</span>
-        </div>
-        <h2 className="landing-section-title">
-          Why VERIDIAN Wins
-        </h2>
-        <p className="landing-section-sub">
-          No commercial OSINT tool automatically converts a live event into a trading signal.
-          We do it in under 10 seconds. For free.
-        </p>
-        <CompetitorTable />
       </section>
 
       {/* ─── TECH STACK ─── */}
@@ -413,54 +330,30 @@ export default function LandingPage() {
         <div className="landing-tech-grid">
           <TechBadge icon="fa-brands fa-react" label="React 18" color="#61DAFB" />
           <TechBadge icon="fa-brands fa-node-js" label="Node.js" color="#339933" />
-          <TechBadge icon="fa-solid fa-database" label="MongoDB" color="#47A248" />
-          <TechBadge icon="fa-solid fa-bolt" label="Groq AI" color="#00FF88" />
           <TechBadge icon="fa-solid fa-globe" label="Globe.gl" color="#7C3AED" />
-          <TechBadge icon="fa-solid fa-plug" label="Socket.IO" color="#00D4FF" />
           <TechBadge icon="fa-solid fa-chart-line" label="Recharts" color="#22B5BF" />
-          <TechBadge icon="fa-brands fa-google" label="Gemini AI" color="#8E75B2" />
-        </div>
-      </section>
-
-      {/* ─── FINAL CTA ─── */}
-      <section className="landing-final-cta">
-        <div className="landing-final-glow" />
-        <h2 className="landing-final-title">
-          Intelligence Doesn't Wait.<br />
-          <span style={{ color: 'var(--color-cyan)' }}>Neither Should You.</span>
-        </h2>
-        <p className="landing-final-sub">
-          Zero login. Zero cost. Full enterprise-grade geopolitical intelligence.
-        </p>
-        <button onClick={() => navigate('/command')} className="landing-cta-primary landing-cta-large">
-          <i className="fa-solid fa-satellite-dish" />
-          <span>ENTER VERIDIAN</span>
-          <div className="landing-cta-shine" />
-        </button>
-        <div className="landing-final-tags">
-          <span>Built in 24 hours</span>
-          <span className="landing-final-divider">·</span>
-          <span>MERN Stack</span>
-          <span className="landing-final-divider">·</span>
-          <span>$0 to run</span>
-          <span className="landing-final-divider">·</span>
-          <span>Zero mock data</span>
-          <span className="landing-final-divider">·</span>
-          <span>30+ free APIs</span>
+          <TechBadge icon="fa-solid fa-plug" label="Socket.IO" color="#00D4FF" />
+          <TechBadge icon="fa-solid fa-wind" label="Tailwind CSS" color="#38BDF8" />
         </div>
       </section>
 
       {/* ─── FOOTER ─── */}
       <footer className="landing-footer">
-        <div className="landing-footer-brand">
-          <i className="fa-solid fa-satellite-dish" style={{ color: 'var(--color-cyan)' }} />
-          <span>VERIDIAN</span>
+        <div className="landing-footer-brand flex items-center gap-2">
+          <div className="w-6 h-6 rounded border border-[var(--color-cyan)]/25 p-[2px] overflow-hidden bg-black/45 flex items-center justify-center">
+            <img 
+              src="/thoth.jpg" 
+              alt="THOTH Logo" 
+              className="w-full h-full object-cover rounded-sm"
+              style={{
+                filter: 'grayscale(100%) sepia(100%) hue-rotate(150deg) saturate(2.5) brightness(1.0) contrast(1.1)'
+              }}
+            />
+          </div>
+          <span>THOTH</span>
         </div>
         <p className="landing-footer-copy">
-          Where Geopolitics Meets Trading Intelligence
-        </p>
-        <p className="landing-footer-team">
-          Built with ❤️ by Harnoor Kaur, Prince Sagwal, Piyush Kumar, Prakash Tiwari
+          Ionospheric Research & Space Weather Diagnostics
         </p>
       </footer>
     </div>

@@ -48,22 +48,13 @@ export default function useGlobeData() {
 
   useEffect(() => {
     fetchEvents();
-    fetchFlights();
-    fetchVessels();
-    fetchCyber();
 
     const evtInterval = setInterval(fetchEvents, 5 * 60 * 1000);
-    const fltInterval = setInterval(fetchFlights, 60 * 1000); // 60s
-    const vslInterval = setInterval(fetchVessels, 60 * 1000); // 60s
-    const cybInterval = setInterval(fetchCyber, 10 * 60 * 1000);
 
     return () => {
       clearInterval(evtInterval);
-      clearInterval(fltInterval);
-      clearInterval(vslInterval);
-      clearInterval(cybInterval);
     };
-  }, [fetchEvents, fetchFlights, fetchVessels, fetchCyber]);
+  }, [fetchEvents]);
 
   return { events, flights, vessels, cyber, loading, refetch: fetchEvents };
 }

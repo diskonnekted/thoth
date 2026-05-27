@@ -45,10 +45,19 @@ export default function Navbar({
       {/* ── LEFT: Branding ── */}
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-3">
-          <i className="fa-solid fa-satellite-dish text-[var(--color-cyan)] drop-shadow-[0_0_8px_rgba(0,212,255,0.4)]" style={{ fontSize: 22 }}></i>
+          <div className="w-9 h-9 rounded-md border border-[var(--color-cyan)]/25 p-[2px] overflow-hidden bg-black/40 flex items-center justify-center shadow-[0_0_10px_rgba(0,212,255,0.2)]">
+            <img 
+              src="/thoth.jpg" 
+              alt="THOTH Logo" 
+              className="w-full h-full object-cover rounded-sm"
+              style={{
+                filter: 'grayscale(100%) sepia(100%) hue-rotate(150deg) saturate(2.5) brightness(1.1) contrast(1.2)'
+              }}
+            />
+          </div>
           <div className="flex flex-col">
-            <span className="text-[var(--color-cyan)] font-heading font-black text-xl tracking-[0.12em] leading-none uppercase drop-shadow-[0_0_12px_rgba(0,212,255,0.15)]">VERIDIAN</span>
-            <span className="text-white/25 font-mono text-[8px] tracking-[0.3em] uppercase mt-1">Geopolitical Intelligence</span>
+            <span className="text-[var(--color-cyan)] font-heading font-black text-xl tracking-[0.12em] leading-none uppercase drop-shadow-[0_0_12px_rgba(0,212,255,0.15)]">THOTH</span>
+            <span className="text-white/25 font-mono text-[8px] tracking-[0.35em] uppercase mt-1">Telemetry HAARP Observation & Tracking Hub</span>
           </div>
         </div>
         <div className="flex items-center gap-2 ml-2">
@@ -85,7 +94,7 @@ export default function Navbar({
                 ))}
               </div>
             </div>
-            <span className="text-[8px] font-semibold text-white/25 tracking-[0.3em] uppercase">Active Status</span>
+            <span className="text-[8px] font-semibold text-white/25 tracking-[0.3em] uppercase">Critical Alerts</span>
           </div>
           
           {/* Divider */}
@@ -106,7 +115,7 @@ export default function Navbar({
                 {tensionCount}
               </span>
             </div>
-            <span className="text-[8px] font-semibold text-white/25 tracking-[0.3em] uppercase">Intelligence Tensions</span>
+            <span className="text-[8px] font-semibold text-white/25 tracking-[0.3em] uppercase">Ionosphere Disturbances</span>
           </div>
         </div>
       </div>
@@ -138,7 +147,7 @@ export default function Navbar({
 
         {/* Predictions */}
         <div onClick={onPredictionsClick} className="cursor-pointer">
-           <TacticalButton label="Predictions" icon="fa-bullseye" />
+           <TacticalButton label="Space Weather" icon="fa-sun" />
         </div>
         
         {/* Waveform */}

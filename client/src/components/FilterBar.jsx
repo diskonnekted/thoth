@@ -1,12 +1,12 @@
 import React from 'react';
 
 const FILTERS = [
-  { key: 'conflict',   label: 'Conflicts',   icon: 'fa-solid fa-explosion',     color: 'var(--color-red)'    },
-  { key: 'protest',    label: 'Protests',    icon: 'fa-solid fa-people-group',  color: 'var(--color-orange)' },
-  { key: 'disaster',   label: 'Disasters',   icon: 'fa-solid fa-house-tsunami', color: 'var(--color-yellow)' },
-  { key: 'earthquake', label: 'Earthquakes', icon: 'fa-solid fa-mountain',      color: 'var(--color-gold)'   },
-  { key: 'wildfire',   label: 'Wildfires',   icon: 'fa-solid fa-fire',          color: 'var(--color-orange)' },
-  { key: 'flight',     label: 'Military',    icon: 'fa-solid fa-fighter-jet',   color: 'var(--color-cyan)'   },
+  { key: 'campaign',    label: 'HAARP Runs',  icon: 'fa-solid fa-satellite-dish',color: 'var(--color-cyan)'   },
+  { key: 'aurora',      label: 'Auroras',     icon: 'fa-solid fa-wand-magic-sparkles', color: 'var(--color-green)' },
+  { key: 'disturbance', label: 'Disturbances',icon: 'fa-solid fa-wave-square', color: 'var(--color-yellow)' },
+  { key: 'disaster',    label: 'Disasters',   icon: 'fa-solid fa-house-tsunami', color: 'var(--color-gold)' },
+  { key: 'earthquake',  label: 'Seismic',     icon: 'fa-solid fa-mountain',      color: 'var(--color-orange)'   },
+  { key: 'wildfire',    label: 'Wildfires',   icon: 'fa-solid fa-fire',          color: 'var(--color-red)' },
 ];
 
 const TIME_RANGES = [

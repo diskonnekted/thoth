@@ -5,7 +5,7 @@ import './index.css';
 import axios from 'axios';
 import { ToastProvider } from './components/ToastNotifications';
 
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // Supress react-globe.gl internal THREE.Clock deprecation warnings
 const originalError = console.error;

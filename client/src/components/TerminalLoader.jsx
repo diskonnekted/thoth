@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const MESSAGES = [
-  "INITIALIZING SECURE HANDSHAKE...",
-  "ESTABLISHING UPLINK WITH GLOBAL SENSOR GRID...",
-  "DECRYPTING SIGNAL STREAMS [AES-256]...",
-  "INGESTING FLIGHT TELEMETRY [4,192 NODES]...",
-  "CROSS-REFERENCING OSINT DATABASES...",
-  "RUNNING NEURAL SENTIMENT MODEL...",
-  "ANALYZING GEO-POLITICAL RISK VECTORS...",
-  "EXTRACTING TRADING SIGNALS FROM NOISE...",
-  "CORRELATING EVENT CLUSTERS...",
-  "GENERATING EXECUTIVE SITREP...",
+  "INITIALIZING SATELLITE HANDSHAKE...",
+  "ESTABLISHING UPLINK WITH ALASKA SENSOR GRID...",
+  "DECRYPTING FREQUENCY SWEEPS...",
+  "INGESTING SENSOR TELEMETRY [GAKONA OBS]...",
+  "CROSS-REFERENCING MAGNETOMETER FLUX...",
+  "RUNNING IONOSPHERE PROPAGATION MODEL...",
+  "ANALYZING SPACE WEATHER DYNAMICS...",
+  "EXTRACTING VLF SIGNAL DENSITY FROM NOISE...",
+  "CORRELATING SOLAR FLARE CLUSTERS...",
+  "GENERATING EXECUTIVE THOTH SITREP...",
 ];
 
 const HEX_CHARS = "0123456789ABCDEF";
@@ -23,7 +23,7 @@ function getRandomHex(length = 8) {
   return result;
 }
 
-export default function TerminalLoader({ context = "GLOBAL INTELLIGENCE" }) {
+export default function TerminalLoader({ context = "THOTH TELEMETRY SYSTEM" }) {
   const [logs, setLogs] = useState([]);
   const [scanlinePos, setScanlinePos] = useState(0);
   const scrollRef = useRef(null);
@@ -33,7 +33,7 @@ export default function TerminalLoader({ context = "GLOBAL INTELLIGENCE" }) {
     let messageIndex = 0;
     
     // Add initial boot log
-    setLogs([{ text: `INIT VERIDIAN_AI_CORE // ${context}`, timestamp: new Date().toISOString(), type: 'system' }]);
+    setLogs([{ text: `INIT THOTH_CORE // ${context}`, timestamp: new Date().toISOString(), type: 'system' }]);
 
     const logInterval = setInterval(() => {
       setLogs(prev => {

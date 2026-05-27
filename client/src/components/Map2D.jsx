@@ -19,9 +19,8 @@ const SEVERITY_COLORS = {
   LOW: '#00FF88',
 };
 
-// SVG path for airplane icon — points north at heading 0°.
-// Rotated at render time via CSS transform using the flight's heading value.
-const AIRPLANE_PATH = "M12 2 L10.5 8 L4 11 L4 12.5 L10.5 10.5 L10 18 L7 20 L7 21.5 L12 19.5 L17 21.5 L17 20 L14 18 L13.5 10.5 L20 12.5 L20 11 L13.5 8 Z";
+// SVG path for radio tower icon
+const AIRPLANE_PATH = "M12 2c-.8 0-1.5.7-1.5 1.5c0 .5.3.9.7 1.2L7.3 18H6v2h12v-2h-1.3l-3.9-13.3c.4-.3.7-.7.7-1.2c0-.8-.7-1.5-1.5-1.5zm0 1c.3 0 .5.2.5.5s-.2.5-.5.5s-.5-.2-.5-.5s.2-.5.5-.5z";
 
 // SVG path for vessel icon — generic ship silhouette.
 // Also rotated at render time using the vessel's heading value.
@@ -172,7 +171,7 @@ export default function Map2D({ events = [], flights = [], vessels = [], showFli
             {f.callsign}
           </text>
           {/* Native SVG tooltip — shown on hover by the browser */}
-          <title>{`${f.callsign} | ${f.aircraftType || 'Tactical'} | ALT ${f.altitude}ft | ${f.velocity}kts | HDG ${heading}°`}</title>
+          <title>{`${f.callsign} | ${f.aircraftType || 'STATION'} | STATUS: ${f.isSurge ? 'ACTIVE' : f.isNearConflict ? 'STANDBY' : 'IDLE'} | ${f.location || ''}`}</title>
         </Marker>
       );
     });
@@ -226,7 +225,7 @@ export default function Map2D({ events = [], flights = [], vessels = [], showFli
     <div className="w-full h-full flex flex-col items-center justify-center p-4 relative" style={{ minHeight: 400, background: '#0a1016' }}>
        {/* Panel label — non-interactive, positioned top-left */}
        <div className="absolute top-4 left-4 z-10 panel px-3 py-2 pointer-events-none" style={{ background: 'rgba(10, 15, 25, 0.8)' }}>
-          <p className="text-muted text-xs font-medium uppercase tracking-wider"><i className="fa-solid fa-map mr-2"></i>Market Impact Map</p>
+          <p className="text-muted text-xs font-medium uppercase tracking-wider"><i className="fa-solid fa-satellite-dish mr-2"></i>HAARP Observatory Map</p>
        </div>
 
       {/* ComposableMap — fixed 800×400 internal coordinate space, scales to container */}
@@ -249,7 +248,7 @@ export default function Map2D({ events = [], flights = [], vessels = [], showFli
 
       {/* Bottom hint badge — guides user to interact with the map */}
       <div className="absolute bottom-6 px-4 py-1.5 rounded-full" style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.05)' }}>
-         <span className="text-[10px] text-muted font-mono uppercase tracking-widest">Click any country to view financial analysis</span>
+         <span className="text-[10px] text-muted font-mono uppercase tracking-widest">Hover over stations to view active operational frequency</span>
       </div>
     </div>
   );

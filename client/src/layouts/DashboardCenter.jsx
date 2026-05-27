@@ -2,27 +2,12 @@ import React, { useState } from "react";
 import FilterBar from "../components/FilterBar";
 import Globe from "../components/Globe";
 import Map2D from "../components/Map2D";
-import RegionPanel from "../components/RegionPanel";
-import TensionChart from "../components/TensionChart";
-import FlightConsole from "../components/FlightConsole";
-import FlightInfoPopup from "../components/FlightInfoPopup";
-import VesselConsole from "../components/VesselConsole";
-import VesselInfoPopup from "../components/VesselInfoPopup";
 import ErrorBoundary from "../components/ErrorBoundary";
-
-import IntelFullPage from "./IntelFullPage";
-import TradeFullPage from "./TradeFullPage";
-import ForecastFullPage from "./ForecastFullPage";
-import SitrepFullPage from "./SitrepFullPage";
-import SignalsFullPage from "./SignalsFullPage";
-
 import { useData } from "../context/DataContext";
 import { useUI } from "../context/UIContext";
 
 export default function DashboardCenter() {
-  const { flights, cyber, news, aiRegions } = useData();
-  const [selectedFlight, setSelectedFlight] = useState(null);
-  const [selectedVessel, setSelectedVessel] = useState(null);
+  const { stations, spaceWeather } = useData();
   const {
     activeFilters,
     handleFilterToggle,
@@ -30,43 +15,37 @@ export default function DashboardCenter() {
     setTimeRange,
     viewMode,
     setViewMode,
-    showFlights,
-    setShowFlights,
-    showVessels,
-    setShowVessels,
-    showCyber,
-    setShowCyber,
-    showRegions,
-    setShowRegions,
+    showFlights: showStations,
+    setShowFlights: setShowStations,
     showHeatmap,
     setShowHeatmap,
-    showTension,
-    setShowTension,
     leftPanelVisible,
     setLeftPanelVisible,
     rightPanelVisible,
     setRightPanelVisible,
-    fullPageView,
-    setFullPageView,
-    audio,
     filteredEvents,
-    filteredFlights,
-    filteredVessels,
     handleCountryClick,
     flyToTarget,
-    handleRegionClick,
-    flightCategory,
-    setFlightCategory,
-    vesselCategory,
-    setVesselCategory,
-    minTime,
-    maxTime,
-    scrubTime,
-    setScrubTime,
   } = useUI();
 
+  // Map HAARP stations to flight-like markers for Globe/Map rendering compatibility
+  const stationMarkers = React.useMemo(() => {
+    return (stations || []).map((st) => ({
+      ...st,
+      callsign: st.name,
+      aircraftType: st.type.toUpperCase(),
+      heading: 0,
+      isSurge: st.status === 'ACTIVE',
+      isNearConflict: st.status === 'STANDBY',
+      velocity: 0,
+      altitude: 0,
+      destLat: null,
+      destLng: null,
+    }));
+  }, [stations]);
+
   // Helper for toggle button styling
-  const toggleBtnClass = (active, color = "var(--color-cyan)") =>
+  const toggleBtnClass = (active) =>
     `p-2 transition-all cursor-pointer border rounded-md w-8 h-8 flex items-center justify-center btn-press ${
       active
         ? `border-transparent`
@@ -75,23 +54,6 @@ export default function DashboardCenter() {
 
   return (
     <div className="flex-1 relative overflow-hidden">
-      {/* Full Page Overlays */}
-      {(fullPageView === "intel" || fullPageView === "news") && (
-        <IntelFullPage onClose={() => setFullPageView(null)} />
-      )}
-      {(fullPageView === "trade" || fullPageView === "finance") && (
-        <TradeFullPage onClose={() => setFullPageView(null)} />
-      )}
-      {(fullPageView === "forecast" || fullPageView === "predictions") && (
-        <ForecastFullPage onClose={() => setFullPageView(null)} />
-      )}
-      {fullPageView === "sitrep" && (
-        <SitrepFullPage onClose={() => setFullPageView(null)} />
-      )}
-      {fullPageView === "signals" && (
-        <SignalsFullPage onClose={() => setFullPageView(null)} />
-      )}
-
       {/* Filter Bar + View Controls */}
       <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
         <div className="pointer-events-auto backdrop-blur-xl bg-gradient-to-b from-black/50 to-black/30 border-b border-white/[0.04] px-2 min-h-[48px] py-1 flex flex-wrap items-center gap-2">
@@ -108,24 +70,16 @@ export default function DashboardCenter() {
             {/* View mode toggle */}
             <div className="flex items-center bg-black/30 rounded-md p-1 border border-white/[0.05]">
               <button
-                onMouseEnter={audio.playHover}
-                onClick={() => {
-                  setViewMode("globe");
-                  audio.playClick();
-                }}
+                onClick={() => setViewMode("globe")}
                 className={`p-1.5 transition-all cursor-pointer border-none rounded-md btn-press ${viewMode === "globe" ? "text-[var(--color-cyan)] bg-[var(--color-cyan)]/[0.12]" : "text-muted hover:text-white/50"}`}
-                title="3D Globe"
+                title="3D Globe View"
               >
                 <i className="fa-solid fa-earth-americas text-sm"></i>
               </button>
               <button
-                onMouseEnter={audio.playHover}
-                onClick={() => {
-                  setViewMode("map2d");
-                  audio.playClick();
-                }}
+                onClick={() => setViewMode("map2d")}
                 className={`p-1.5 transition-all cursor-pointer border-none rounded-md btn-press ${viewMode === "map2d" ? "text-[var(--color-cyan)] bg-[var(--color-cyan)]/[0.12]" : "text-muted hover:text-white/50"}`}
-                title="2D Map"
+                title="2D Map View"
               >
                 <i className="fa-solid fa-map text-sm"></i>
               </button>
@@ -134,64 +88,25 @@ export default function DashboardCenter() {
             {/* Layer toggles */}
             <div className="flex items-center gap-1.5">
               <button
-                onMouseEnter={audio.playHover}
-                onClick={() => { setShowFlights(!showFlights); audio.playClick(); }}
-                className={toggleBtnClass(showFlights)}
-                style={showFlights ? { color: 'var(--color-cyan)', background: 'rgba(0,212,255,0.12)', borderColor: 'rgba(0,212,255,0.2)' } : {}}
-                title="Military Intelligence"
+                onClick={() => setShowStations(!showStations)}
+                className={toggleBtnClass(showStations)}
+                style={showStations ? { color: 'var(--color-cyan)', background: 'rgba(0,212,255,0.12)', borderColor: 'rgba(0,212,255,0.2)' } : {}}
+                title="Toggle Facility Network Overlay"
               >
-                <i className="fa-solid fa-fighter-jet text-[10px]"></i>
+                <i className="fa-solid fa-satellite-dish text-[10px]"></i>
               </button>
               <button
-                onMouseEnter={audio.playHover}
-                onClick={() => { setShowVessels(!showVessels); audio.playClick(); }}
-                className={toggleBtnClass(showVessels)}
-                style={showVessels ? { color: '#00ff7f', background: 'rgba(0,255,127,0.12)', borderColor: 'rgba(0,255,127,0.2)' } : {}}
-                title="Maritime Intelligence"
-              >
-                <i className="fa-solid fa-anchor text-[10px]"></i>
-              </button>
-              <button
-                onMouseEnter={audio.playHover}
-                onClick={() => { setShowCyber(!showCyber); audio.playClick(); }}
-                className={toggleBtnClass(showCyber)}
-                style={showCyber ? { color: 'var(--color-purple)', background: 'rgba(124,58,237,0.12)', borderColor: 'rgba(124,58,237,0.2)' } : {}}
-                title="Cyber Threats"
-              >
-                <i className="fa-solid fa-shield-halved text-[10px]"></i>
-              </button>
-              <button
-                onMouseEnter={audio.playHover}
-                onClick={() => { setShowRegions(!showRegions); audio.playClick(); }}
-                className={toggleBtnClass(showRegions)}
-                style={showRegions ? { color: 'var(--color-cyan)', background: 'rgba(0,212,255,0.12)', borderColor: 'rgba(0,212,255,0.2)' } : {}}
-                title="Regions"
-              >
-                <i className="fa-solid fa-chart-pie text-[10px]"></i>
-              </button>
-              <button
-                onMouseEnter={audio.playHover}
-                onClick={() => { setShowHeatmap(!showHeatmap); audio.playClick(); }}
+                onClick={() => setShowHeatmap(!showHeatmap)}
                 className={toggleBtnClass(showHeatmap)}
                 style={showHeatmap ? { color: '#ff4500', background: 'rgba(255,69,0,0.12)', borderColor: 'rgba(255,69,0,0.2)' } : {}}
-                title="Threat Heatmap"
+                title="Ionospheric Scintillation Heatmap"
               >
-                <i className="fa-solid fa-fire-flame-curved text-[10px]"></i>
-              </button>
-              <button
-                onMouseEnter={audio.playHover}
-                onClick={() => { setShowTension(!showTension); audio.playClick(); }}
-                className={toggleBtnClass(showTension)}
-                style={showTension ? { color: 'var(--color-yellow)', background: 'rgba(234,179,8,0.12)', borderColor: 'rgba(234,179,8,0.2)' } : {}}
-                title="Global Tension Index"
-              >
-                <i className="fa-solid fa-chart-line text-[10px]"></i>
+                <i className="fa-solid fa-circle-nodes text-[10px]"></i>
               </button>
             </div>
 
             {/* Panel toggle */}
             <button
-              onMouseEnter={audio.playHover}
               onClick={() => {
                 if (leftPanelVisible || rightPanelVisible) {
                   setLeftPanelVisible(false);
@@ -200,19 +115,12 @@ export default function DashboardCenter() {
                   setLeftPanelVisible(true);
                   setRightPanelVisible(true);
                 }
-                audio.playClick();
               }}
               className={`${toggleBtnClass(!leftPanelVisible && !rightPanelVisible)} ml-2`}
               style={!leftPanelVisible && !rightPanelVisible ? { color: 'var(--color-gold)', background: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.2)' } : {}}
-              title={
-                leftPanelVisible || rightPanelVisible
-                  ? "Hide Intel Panels"
-                  : "Show Intel Panels"
-              }
+              title={leftPanelVisible || rightPanelVisible ? "Hide Side Panels" : "Show Side Panels"}
             >
-              <i
-                className={`fa-solid ${leftPanelVisible || rightPanelVisible ? "fa-eye-slash" : "fa-eye"} text-[10px]`}
-              ></i>
+              <i className={`fa-solid ${leftPanelVisible || rightPanelVisible ? "fa-eye-slash" : "fa-eye"} text-[10px]`}></i>
             </button>
           </div>
         </div>
@@ -227,109 +135,51 @@ export default function DashboardCenter() {
           {viewMode === "globe" ? (
             <Globe
               events={filteredEvents}
-              flights={filteredFlights}
-              vessels={filteredVessels}
-              cyber={cyber}
-              showFlights={showFlights}
-              showVessels={showVessels}
-              showCyber={showCyber}
+              flights={stationMarkers}
+              vessels={[]}
+              cyber={[]}
+              showFlights={showStations}
+              showVessels={false}
+              showCyber={false}
               showHeatmap={showHeatmap}
               onCountryClick={handleCountryClick}
-              onFlightClick={setSelectedFlight}
-              onVesselClick={setSelectedVessel}
+              onFlightClick={(st) => console.log('Station selected:', st)}
+              onVesselClick={() => {}}
               flyToTarget={flyToTarget}
             />
           ) : (
             <Map2D
               events={filteredEvents}
-              flights={filteredFlights}
-              vessels={filteredVessels}
-              showFlights={showFlights}
-              showVessels={showVessels}
+              flights={stationMarkers}
+              vessels={[]}
+              showFlights={showStations}
+              showVessels={false}
               onCountryClick={handleCountryClick}
-              onFlightClick={setSelectedFlight}
-              onVesselClick={setSelectedVessel}
+              onFlightClick={(st) => console.log('Station selected:', st)}
+              onVesselClick={() => {}}
             />
           )}
         </ErrorBoundary>
       </div>
-
-      {/* Region Panel */}
-      {showRegions && (
-        <div className="absolute top-14 bottom-36 left-4 right-4 z-20 pointer-events-auto animate-fade-in-up overflow-y-auto custom-scrollbar">
-          <RegionPanel
-            events={filteredEvents}
-            onRegionClick={handleRegionClick}
-            aiRegions={aiRegions}
-          />
-        </div>
-      )}
-
-      {/* Tension Chart */}
-      {showTension && <TensionChart events={filteredEvents} news={news} />}
-
-      {/* Flight Console */}
-      {showFlights && (
-        <FlightConsole
-          flights={filteredFlights}
-          activeCategory={flightCategory}
-          onCategoryChange={setFlightCategory}
-          onFlyTo={(coords) => handleCountryClick(null, coords)}
-        />
-      )}
-
-      {/* Vessel Console */}
-      {showVessels && (
-        <VesselConsole
-          vessels={filteredVessels}
-          activeCategory={vesselCategory}
-          onCategoryChange={setVesselCategory}
-          onFlyTo={(coords) => handleCountryClick(null, coords)}
-        />
-      )}
-
-      {/* Flight Popup */}
-      {selectedFlight && (
-        <FlightInfoPopup
-          flight={selectedFlight}
-          onClose={() => setSelectedFlight(null)}
-          onFlyTo={(f) => {
-            handleCountryClick(null, { lat: f.lat, lng: f.lng });
-            setSelectedFlight(null);
-          }}
-        />
-      )}
-
-      {/* Vessel Popup */}
-      {selectedVessel && (
-        <VesselInfoPopup
-          vessel={selectedVessel}
-          onClose={() => setSelectedVessel(null)}
-          onFlyTo={(v) => {
-            handleCountryClick(null, { lat: v.lat, lng: v.lng });
-            setSelectedVessel(null);
-          }}
-        />
-      )}
 
       {/* Legend */}
       <div className="absolute bottom-4 left-4 z-20 pointer-events-none">
         <div className="bg-[#040810]/70 backdrop-blur-xl border border-white/[0.05] py-2.5 px-4 flex items-center gap-5 text-[9px] uppercase tracking-tighter font-mono rounded-md pointer-events-auto shadow-lg">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.5)]"></span>
-            <span className="text-white/50">Critical</span>
+            <span className="text-white/50">Critical Anomaly</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_4px_rgba(249,115,22,0.5)]"></span>
-            <span className="text-white/50">High</span>
+            <span className="text-white/50">Elevated activity</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_4px_rgba(234,179,8,0.5)]"></span>
-            <span className="text-white/50">Medium</span>
+            <span className="text-white/50">Disturbance</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]"></span>
-            <span className="text-white/50">Low</span>
+            <span className="text-white/50">Quiet / Nominal</span>
           </div>
         </div>
       </div>
