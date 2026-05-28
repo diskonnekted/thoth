@@ -114,6 +114,55 @@ export default function DashboardRightPanel() {
                     </div>
                   </div>
                 </div>
+
+                {/* AURORA FORECAST SECTION */}
+                <div className="border border-white/[0.05] rounded bg-white/[0.01] p-3.5 space-y-3">
+                  <div className="border-b border-white/[0.06] pb-1.5 text-[9px] uppercase tracking-wider font-bold text-white/50 flex items-center justify-between">
+                    <span>Aurora Forecast</span>
+                    <i className="fa-solid fa-wand-magic-sparkles text-[var(--color-green)] animate-pulse"></i>
+                  </div>
+                  
+                  {/* Probability Gauges */}
+                  <div className="space-y-2 text-[9px]">
+                    {[
+                      { label: "High Latitudes (60°+)", value: spaceWeather?.auroraForecast?.probabilityHigh ?? 40, color: "bg-[var(--color-green)]" },
+                      { label: "Mid Latitudes (50°-60°)", value: spaceWeather?.auroraForecast?.probabilityMid ?? 5, color: "bg-[var(--color-yellow)]" },
+                      { label: "Low Latitudes (<50°)", value: spaceWeather?.auroraForecast?.probabilityLow ?? 0, color: "bg-[var(--color-red)]" }
+                    ].map((item, idx) => (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex justify-between text-white/40">
+                          <span>{item.label}</span>
+                          <span className="font-bold text-white">{item.value}%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-white/[0.05] rounded-full overflow-hidden">
+                          <div className={`h-full ${item.color} transition-all duration-500`} style={{ width: `${item.value}%` }}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Dynamic Viewing Tips */}
+                  <div className="bg-black/25 p-2.5 rounded border border-white/[0.03] space-y-1">
+                    <div className="text-[8px] text-white/20 uppercase tracking-widest">Visibility Potential</div>
+                    <p className="text-[8.5px] leading-relaxed text-white/70 font-mono">
+                      {spaceWeather?.auroraForecast?.viewingTips || 'Dim auroral glows restricted to far high-latitude regions.'}
+                    </p>
+                  </div>
+
+                  {/* Visible Regions */}
+                  {spaceWeather?.auroraForecast?.visibleRegions && (
+                    <div className="text-[8px] space-y-1">
+                      <div className="text-white/30 uppercase tracking-wider">Active Sectors:</div>
+                      <div className="flex flex-wrap gap-1">
+                        {spaceWeather.auroraForecast.visibleRegions.map((region, rIdx) => (
+                          <span key={rIdx} className="bg-white/5 border border-white/[0.03] text-white/50 px-1.5 py-0.5 rounded-sm">
+                            {region}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

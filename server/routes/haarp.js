@@ -221,6 +221,39 @@ router.get('/spaceweather', async (req, res) => {
       hartland: Math.min(9, Math.max(0, Math.round(kp * 0.85 + (Math.random() - 0.5) * 0.5)))
     };
 
+    // Calculate aurora forecast probabilities
+    let probabilityHigh = 15;
+    let probabilityMid = 0;
+    let probabilityLow = 0;
+    let viewingTips = 'Very quiet conditions. Auroral displays highly unlikely except near the magnetic poles.';
+    let visibleRegions = ['Polar regions only'];
+
+    if (kp >= 7) {
+      probabilityHigh = 99;
+      probabilityMid = 85;
+      probabilityLow = 45;
+      viewingTips = 'Extremely active aurora storm! Visible overhead at mid latitudes; visible on the horizon at low latitudes. Look north/south depending on hemisphere.';
+      visibleRegions = ['Alaska/Canada', 'Scandinavia', 'Northern UK/Scotland', 'Northern US border states', 'Possibly Midlands/Southern UK & Central US'];
+    } else if (kp >= 5) {
+      probabilityHigh = 90;
+      probabilityMid = 60;
+      probabilityLow = 15;
+      viewingTips = 'Geomagnetic storm active. Aurora visible overhead at high latitudes; visible on the northern horizon at mid latitudes. Find dark skies.';
+      visibleRegions = ['Alaska/Canada', 'Scandinavia', 'Northern UK/Scotland', 'Northern US border states'];
+    } else if (kp >= 3.5) {
+      probabilityHigh = 70;
+      probabilityMid = 25;
+      probabilityLow = 2;
+      viewingTips = 'Minor geomagnetic unrest. Active aurora possible overhead in far high-latitude areas. Quiet glow on horizon in Scotland/Scandinavia.';
+      visibleRegions = ['Alaska/Canada', 'Northern Scandinavia', 'Shetland/Highland Scotland'];
+    } else if (kp >= 2) {
+      probabilityHigh = 40;
+      probabilityMid = 5;
+      probabilityLow = 0;
+      viewingTips = 'Quiet geomagnetic field. Dim auroral glows restricted to high-latitude regions (auroral oval).';
+      visibleRegions = ['Far Northern Alaska/Canada', 'Tromsø/Svalbard Norway'];
+    }
+
     res.json({
       kp,
       ap: bgsDataAvailable ? bgsAp : kp * 4, // Estimate Ap if BGS was down
@@ -233,6 +266,13 @@ router.get('/spaceweather', async (req, res) => {
       solarFlux: Math.round(solarFlux + (Math.random() - 0.5) * 10),
       flareClass: Math.random() > 0.8 ? 'M1.1' : 'C4.5',
       alerts,
+      auroraForecast: {
+        probabilityHigh,
+        probabilityMid,
+        probabilityLow,
+        viewingTips,
+        visibleRegions
+      },
       source: bgsDataAvailable ? 'British Geological Survey (BGS)' : 'NOAA Space Weather Prediction Center (SWPC)'
     });
   } catch (err) {
@@ -248,6 +288,13 @@ router.get('/spaceweather', async (req, res) => {
         { id: 'sim-1', message: 'BGS Space Weather: System online, monitoring UK observatories.', issueTime: new Date().toISOString() },
         { id: 'sim-2', message: 'Geomagnetic conditions: UNSETTLED. Kp expected 3.', issueTime: new Date().toISOString() }
       ],
+      auroraForecast: {
+        probabilityHigh: 55,
+        probabilityMid: 12,
+        probabilityLow: 0,
+        viewingTips: 'Quiet geomagnetic field. Dim auroral glows restricted to high-latitude regions.',
+        visibleRegions: ['Far Northern Alaska/Canada', 'Northern Scandinavia']
+      },
       source: 'Simulated Fallback'
     });
   }
