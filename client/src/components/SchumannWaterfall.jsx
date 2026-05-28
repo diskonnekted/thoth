@@ -38,18 +38,49 @@ export default function SchumannWaterfall({ spectrum = [] }) {
   const canvasRef = useRef(null);
   const [history, setHistory] = useState([]);
   const maxHistoryRows = 80; // height of the waterfall scrolling rows
+  const latestSpectrumRef = useRef([]);
 
-  // Feed new spectrum line into history buffer
+  // Sync latest spectrum from telemetry
   useEffect(() => {
-    if (spectrum.length === 0) return;
-    setHistory(prev => {
-      const next = [spectrum, ...prev];
-      if (next.length > maxHistoryRows) {
-        next.pop();
-      }
-      return next;
-    });
+    if (spectrum && spectrum.length > 0) {
+      latestSpectrumRef.current = spectrum;
+      // Pre-fill history if it's currently empty so user doesn't wait
+      setHistory(prev => {
+        if (prev.length === 0) {
+          return Array(maxHistoryRows).fill(spectrum);
+        }
+        return prev;
+      });
+    }
   }, [spectrum]);
+
+  // Smooth real-time scrolling animation loop
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const baseSpectrum = latestSpectrumRef.current;
+      if (!baseSpectrum || baseSpectrum.length === 0) return;
+
+      // Perturb the spectrum with high-frequency micro-fluctuations to animate live
+      const animatedRow = baseSpectrum.map(point => {
+        // Add +/- 15% random noise for dynamic signal visual
+        const noise = (Math.random() - 0.5) * 0.3 * point.power;
+        return {
+          ...point,
+          power: Math.max(0.5, point.power + noise)
+        };
+      });
+
+      setHistory(prev => {
+        const next = [animatedRow, ...prev];
+        if (next.length > maxHistoryRows) {
+          next.pop();
+        }
+        return next;
+      });
+    }, 250); // 4 FPS smooth scrolling waterfall
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Render waterfall onto HTML5 canvas
   useEffect(() => {

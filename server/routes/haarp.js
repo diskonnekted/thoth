@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
+// Global cache for current Kp index to sync Schumann resonance power
+let globalKp = 3.0;
+
+
 // Curated list of Ionospheric research stations
 const STATIONS = [
   { id: 'st-haarp', name: 'HAARP Facility', lat: 62.3933, lng: -145.1500, type: 'transmitter', status: 'ACTIVE', freq: '3.2 MHz', location: 'Gakona, Alaska, USA' },
@@ -98,17 +102,21 @@ function generateVLFData() {
 }
 
 // Generate Schumann resonance spectrum (power density vs frequency in Hz)
-function generateSchumannData() {
+function generateSchumannData(kpValue = 3.0) {
   const spectrum = [];
   const harmonics = [7.83, 14.3, 20.8, 27.3, 33.8];
+  
+  // High Kp index values (geomagnetic storms) amplify the Schumann resonance power density
+  const kpMultiplier = 1.0 + (parseFloat(kpValue) || 3.0) / 4.0;
+  
   for (let f = 1.0; f <= 40.0; f += 0.5) {
-    let power = 5.0 + (Math.random() - 0.5) * 1.5; // Base noise
-    // Superimpose peaks for harmonics
+    let power = (5.0 + (Math.random() - 0.5) * 1.5) * kpMultiplier; // Base noise scales with Kp
+    // Superimpose harmonic peaks
     harmonics.forEach((h, idx) => {
       const distance = Math.abs(f - h);
       if (distance < 2.0) {
-        // Amplitude decreases for higher harmonics
-        const peakAmp = (25.0 / (idx + 1)) * (1 - distance / 2.0);
+        // Amplitude decreases for higher harmonics, but scales with Kp
+        const peakAmp = ((25.0 / (idx + 1)) * (1 - distance / 2.0)) * kpMultiplier;
         power += peakAmp;
       }
     });
@@ -135,15 +143,33 @@ router.get('/diagnostics', (req, res) => {
     riometer: generateRiometerData(),
     ionosonde: generateIonosondeData(),
     vlf: generateVLFData(),
-    schumann: generateSchumannData(),
+    schumann: generateSchumannData(globalKp),
     lastUpdated: new Date().toISOString()
   });
 });
 
-// Endpoint: Space Weather telemetry from NOAA or simulated
+// Endpoint: Space Weather telemetry from NOAA, BGS, or simulated
 router.get('/spaceweather', async (req, res) => {
   try {
-    // Try to get real Space Weather Alerts from NOAA SWPC API
+    // 1. Fetch real-time K-indices from British Geological Survey (BGS)
+    let bgsKp = 3.0;
+    let bgsAp = 5.0;
+    let bgsDataAvailable = false;
+    
+    try {
+      const bgsRes = await axios.get('https://geomag.bgs.ac.uk/data_service/space_weather/current/3hrap.json', { timeout: 4000 });
+      if (bgsRes.data && Array.isArray(bgsRes.data.fields) && bgsRes.data.fields.length > 0) {
+        const latestField = bgsRes.data.fields[bgsRes.data.fields.length - 1];
+        bgsKp = parseFloat(latestField.kp) || 3.0;
+        bgsAp = parseFloat(latestField.ap) || 5.0;
+        bgsDataAvailable = true;
+        console.log(`[BGS Space Weather] Retrieved current Kp: ${bgsKp}, Ap: ${bgsAp}`);
+      }
+    } catch (e) {
+      console.warn('[BGS Space Weather] Failed to fetch BGS K-indices:', e.message);
+    }
+
+    // 2. Fetch real Space Weather Alerts and Scales from NOAA SWPC API
     const noaaAlertsPromise = axios.get('https://services.swpc.noaa.gov/json/alerts.json', { timeout: 3000 });
     const noaaKpPromise = axios.get('https://services.swpc.noaa.gov/products/noaa-scales.json', { timeout: 3000 });
 
@@ -160,51 +186,69 @@ router.get('/spaceweather', async (req, res) => {
         }));
     } else {
       alerts = [
-        { id: 'sim-1', message: 'SUMMARY: Geomagnetic Sudden Impulse detected at 14:15 UTC.', issueTime: new Date().toISOString() },
-        { id: 'sim-2', message: 'WARNING: Kp = 4 Geomagnetic Storm predicted for high latitudes.', issueTime: new Date().toISOString() }
+        { id: 'sim-1', message: `SUMMARY: BGS Geomagnetic Observatory reporting Kp=${bgsKp}.`, issueTime: new Date().toISOString() },
+        { id: 'sim-2', message: `WARNING: Geomagnetic Storm conditions at UK observatories.`, issueTime: new Date().toISOString() }
       ];
     }
 
-    let kp = 3.2;
+    let kp = bgsDataAvailable ? bgsKp : 3.2;
     let stormG = 0;
     let solarWindSpeed = 412;
     let solarWindDensity = 4.8;
     let solarFlux = 145;
 
-    if (KpResult.status === 'fulfilled') {
+    if (!bgsDataAvailable && KpResult.status === 'fulfilled') {
       const data = KpResult.value.data;
-      // Extract Kp and scale indices if available
       kp = parseFloat(data?.ScaleLevelText || 3.2) || 3.2;
       stormG = parseInt(data?.G?.Scale || 0);
-    } else {
-      kp = parseFloat((2.5 + Math.random() * 2).toFixed(1));
+    } else if (bgsDataAvailable) {
+      // Calculate NOAA G-scale mapping from Kp
+      if (kp >= 9) stormG = 5;
+      else if (kp >= 8) stormG = 4;
+      else if (kp >= 7) stormG = 3;
+      else if (kp >= 6) stormG = 2;
+      else if (kp >= 5) stormG = 1;
+      else stormG = 0;
     }
+
+    // Sync globalKp for Schumann resonance simulation
+    globalKp = kp;
+
+    // Map observatory-specific local K-indices based on BGS Kp
+    const bgsObservatories = {
+      lerwick: Math.min(9, Math.max(0, Math.round(kp * 1.1 + (Math.random() - 0.5) * 0.8))),
+      eskdalemuir: Math.min(9, Math.max(0, Math.round(kp * 0.95 + (Math.random() - 0.5) * 0.5))),
+      hartland: Math.min(9, Math.max(0, Math.round(kp * 0.85 + (Math.random() - 0.5) * 0.5)))
+    };
 
     res.json({
       kp,
+      ap: bgsDataAvailable ? bgsAp : kp * 4, // Estimate Ap if BGS was down
       stormG,
+      observatories: bgsObservatories,
       solarWind: {
         speed: Math.round(solarWindSpeed + (Math.random() - 0.5) * 30),
         density: parseFloat((solarWindDensity + (Math.random() - 0.5) * 2).toFixed(1))
       },
       solarFlux: Math.round(solarFlux + (Math.random() - 0.5) * 10),
       flareClass: Math.random() > 0.8 ? 'M1.1' : 'C4.5',
-      alerts
+      alerts,
+      source: bgsDataAvailable ? 'British Geological Survey (BGS)' : 'NOAA Space Weather Prediction Center (SWPC)'
     });
   } catch (err) {
     res.json({
-      kp: 3.5,
+      kp: 3.0,
+      ap: 12.0,
       stormG: 0,
-      solarWind: {
-        speed: 430,
-        density: 5.1
-      },
+      observatories: { lerwick: 3, eskdalemuir: 3, hartland: 2 },
+      solarWind: { speed: 430, density: 5.1 },
       solarFlux: 138,
       flareClass: 'C3.1',
       alerts: [
-        { id: 'sim-1', message: 'HAARP Operations alert: Ionospheric Heating Campaign scheduled for tomorrow.', issueTime: new Date().toISOString() },
-        { id: 'sim-2', message: 'Geomagnetic conditions: QUIET to UNSETTLED. Kp expected 3-4.', issueTime: new Date().toISOString() }
-      ]
+        { id: 'sim-1', message: 'BGS Space Weather: System online, monitoring UK observatories.', issueTime: new Date().toISOString() },
+        { id: 'sim-2', message: 'Geomagnetic conditions: UNSETTLED. Kp expected 3.', issueTime: new Date().toISOString() }
+      ],
+      source: 'Simulated Fallback'
     });
   }
 });
